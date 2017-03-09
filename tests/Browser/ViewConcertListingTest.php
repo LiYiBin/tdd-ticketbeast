@@ -15,7 +15,7 @@ class ViewConcertListingTest extends DuskTestCase
      use DatabaseMigrations;
 
     /** @test */
-    public function user_can_view_a_concert_listing()
+    public function user_can_view_a_published_concert_listing()
     {
         // Arrange
         // Create a concert
@@ -30,6 +30,7 @@ class ViewConcertListingTest extends DuskTestCase
             'state' => 'ON',
             'zip' => '17916',
             'additional_intformation' => 'For tickets, call (555) 555-5555.',
+            'published_at' => Carbon::parse('-1 week'),
         ]);
         
         $this->browse(function ($browser) use ($concert) {
@@ -49,5 +50,20 @@ class ViewConcertListingTest extends DuskTestCase
                 ->assertSee('Laraville, ON 17916')
                 ->assertSee('For tickets, call (555) 555-5555.');
         });
+    }
+
+    /** @test */
+    public function user_cannot_view_unpublished_concert_listing()
+    {
+        // Arrange
+        $concert = factory(Concert::class)->create([
+            'published_at' => null,
+        ]);
+
+        // Act
+        $response = $this->get('/concerts/'.$concert->id);
+
+        // Assert
+        $response->assertStatus(404);
     }
 }
